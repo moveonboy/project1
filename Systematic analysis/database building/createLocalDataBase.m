@@ -1,41 +1,62 @@
-function glycaninMS = createLocalDataBase(pathwayfilename,MSfilename)
-%createLocalDataBase load the glycanpathway and MS rawdata to build a local glycan
-% database, glycans in which have corresponding peaks in MS rawdata.
+function glycaninMS = createLocalDataBase(pathwayfilename,varargin) % MSfilename
+%createLocalDataBase load the glycanpathway to build a local glycan
+% database, including all the potential glycans.
 %
-% glycaninMS = createLocalDataBase(pathwayfilename,MSfilename) load the glycanpathway
-% named by pathwayfilename and MS rawdata named by MSfilename to create the local database. 
+% glycaninMS = createLocalDataBase(pathwayfilename,outputfilename) load the glycanpathway
+% named by pathwayfilename to create the local database and write the composition and monoisotopic 
+% mass into Excel file.. 
 %
 % Example:
-%     glycaninMS=createLocalDataBase('MSglycandatabase.mat','MSdata.mat')
+%     glycaninMS=createLocalDataBase('MSglycandatabase.mat','HL60glycanList.xls')
 %
 %
 % Author: Yusen Zhou
-% Date Lastly Updated: 9/22/14
-load(MSfilename);
+% Date Lastly Updated: 11/06/14
+
+outputfilename = '';
+if(length(varargin)==1)
+    outputfilename=varargin{1};
+end
+% load(MSfilename);
 glycanpath       = load(pathwayfilename);
 HL60WTGlycanPath = glycanpath.nlinkedpath;
 listofSpecies    = HL60WTGlycanPath.theSpecies;
-peaklist         = MSdata.peaklist;
-peakwidth        = MSdata.pfwhh;
-isGlycaninMS     = 0;
+% peaklist         = MSdata.peaklist;
+% peakwidth        = MSdata.pfwhh;
+% isGlycaninMS     = 0;
 glycaninMS       = CellArrayList;
+expecGlycan      = cell(length(listofSpecies),1);
+monoisomw        = cell(length(listofSpecies),1);
 for i = 1 : length(listofSpecies)
-    ithspecies         = listofSpecies.get(i);
-    ithcompostion      = strcomp(ithspecies);
-    ithspeciesmonomass = glycanMolWt(ithcompostion);
-    for j = 1 : length(peaklist)
-        jthpeak = peaklist(j,1);
-        pwfhh   = peakwidth(j,2)-peakwidth(j,1);
-        if((abs(jthpeak-ithspeciesmonomass))<0.5*(pwfhh))
-            isGlycaninMS = 1;
-            break
-        end
-    end
-    if(isGlycaninMS)
-        glycaninMS.add(ithspecies)
-    end
+    ithspecies           = listofSpecies.get(i);
+    ithcompostion        = strcomp(ithspecies);
+    ithspeciesmonomass   = glycanMolWt(ithcompostion);
+    expecGlycan{count+1} = ithcompostion;
+    monoisomw{count+1}   = ithspeciesmonomass;
+    glycaninMS.add(ithspecies)
+    count = count+1;
+%     for j = 1 : length(peaklist)
+%         jthpeak = peaklist(j,1);
+%         pwfhh   = peakwidth(j,2)-peakwidth(j,1);
+%         if((abs(jthpeak-ithspeciesmonomass))<0.5*(pwfhh))
+%             isGlycaninMS = 1;
+%             break
+%         end
+%     end
+%     if(isGlycaninMS)
+%         glycaninMS.add(ithspecies)
+%     end
 end
 save('MSglycandatabase','glycaninMS')
+
+if(~isempty(outputfilename))
+    A1=cellstr('Composition');
+    B1=cellstr('Monoisotopic mass');
+    xlswrite(outputfilename,A1,1,'A1');
+    xlswrite(outputfilename,B1,1,'B1');
+    xlswrite(outputfilename,expecGlycan,1,'A2');
+    xlswrite(outputfilename, monoisomw,1,'B2');
+end
 end
 
 function composition = strcomp(species)
