@@ -23,14 +23,41 @@ for i = 1: length(substrSpecies)
                 (isequal(jthresidue.getParent.anomer.symbol,'b'))
             continue
         end
-                            
+        
         branchdepth(counter+1) = glycanObj.getBranchDepth(jthresidue);
         counter                = counter+1;
     end
-    if(~isequal(max(branchdepth),min(branchdepth)))
-        listofspecis.add(ithSpecies)
+    
+    if(isempty(enzObj.isTerminalTarget))
+        enzObj.isTerminalTarget = true;
+    end
+    
+    if(enzObj.isTerminalTarget)
+        if(~isequal(max(branchdepth),min(branchdepth)))
+            listofspecis.add(ithSpecies)
+        else
+            listofspecis_bracket.add(ithSpecies)
+        end
     else
-        listofspecis_bracket.add(ithSpecies)
+        numoftargetresidue = 0;
+        for j = 1 : length(commomresidues)
+            jthresidue = commomresidues{1,j};
+            if(~isequal(enzObj.resfuncgroup.name,'Fuc'))
+                if(isequal(jthresidue.residueType.name,resfuncgroupname))
+                    numoftargetresidue = numoftargetresidue+1;
+                end
+            else
+                if(isequal(jthresidue.residueType.name,'Fuc'))&&...
+                        (~isequal(jthresidue.linkageParent.bonds.posParent,'6'))
+                    numoftargetresidue = numoftargetresidue+1;
+                end 
+            end
+        end
+        if(numoftargetresidue<length(branchdepth))&&(numoftargetresidue>0)
+            listofspecis.add(ithSpecies)
+        else
+            listofspecis_bracket.add(ithSpecies)
+        end 
     end
 end
 
@@ -46,7 +73,7 @@ if(~isempty(listofspecis))
     glycanSpecies  = listofspecis.get(1);
     bracketresidue = getAllResidues(glycanSpecies.glycanStruct,'bracket');
     [corespecies,corebracket] = getstruct(glycanSpecies,resfuncgroupname);
-    newglycanSpecies = combinestruct(corespecies,corebracket,bracketresidue);
+    newglycanSpecies = combinestruct(corespecies,corebracket,bracketresidue,enzObj);
     newsubstrSpecies.add(newglycanSpecies);
 end
 numSubstr = length(newsubstrSpecies);
@@ -61,9 +88,17 @@ nonreResidues            = corestruct.getNonRedEndResidue;
 counter = 0;
 for i = 1 : length(nonreResidues)
     ithresidue = nonreResidues{1,i};
-    if(isequal(ithresidue.residueType.name,resfuncgroupname))
-        corebracket(counter+1,1) = ithresidue;
-        counter = counter+1;
+    if(~isequal(resfuncgroupname,'Fuc'))
+        if(isequal(ithresidue.residueType.name,resfuncgroupname))
+            corebracket(counter+1,1) = ithresidue;
+            counter = counter+1;
+        end
+    else
+        if(isequal(ithresidue.residueType.name,resfuncgroupname))&&...
+                (~isequal(ithresidue.linkageParent.bonds.posParent,'6'))
+            corebracket(counter+1,1) = ithresidue;
+            counter = counter+1;
+        end
     end
 end
 corespecies              = Species.clone;
@@ -71,7 +106,7 @@ corespecies.glycanStruct = corestruct;
 corespecies.name         = corestruct.name;
 end
 
-function newglycanSpecies = combinestruct(corespecies,corebracket,bracketresidue)
+function newglycanSpecies = combinestruct(corespecies,corebracket,bracketresidue,enzObj)
 counter = 0;
 for i = 1 : length(bracketresidue)
     ithresidue = bracketresidue{1,i};
@@ -99,28 +134,43 @@ for i = 1 : length(addresidue)
 end
 addresidue(loci) = '';
 
-for i = 1 : length(corebracket)
-    ithresidue    = corebracket(i);
-    try
-        ithaddresidue = addresidue(i);
-    catch
-        break
+if(enzObj.isTerminalTarget)
+    for i = 1 : length(corebracket)
+        ithresidue    = corebracket(i);
+        try
+            ithaddresidue = addresidue(i);
+        catch
+            break
+        end
+        isResidueAdded = addResidue(corespecies.glycanStruct,ithresidue,ithaddresidue);
     end
-isResidueAdded = addResidue(corespecies.glycanStruct,ithresidue,ithaddresidue);
-end
-
-
-corespecies.glycanStruct.bracketResidue(corebracket);
-if(~isempty(branchedresidue))
-    bracketresidues = getAllResidues(corespecies.glycanStruct,'bracket');
-    for i = 1 : length(bracketresidues)
-        ithresidue = bracketresidues{i};
+    corespecies.glycanStruct.bracketResidue(corebracket);
+    if(~isempty(branchedresidue))
+        bracketresidues = getAllResidues(corespecies.glycanStruct,'bracket');
+        for i = 1 : length(bracketresidues)
+            ithresidue = bracketresidues{i};
+            if(isequal(ithresidue.residueType.name,'#bracket'))
+                for j = 1 : length(branchedresidue)
+                    jthresidue = branchedresidue{j};
+                    isResidueAdded = addResidue(corespecies.glycanStruct,ithresidue,jthresidue);
+                end
+                break
+            end
+        end
+    end
+else
+    corespecies.glycanStruct.bracketResidue(corebracket);
+    corebracketresidue = getAllResidues(corespecies.glycanStruct,'bracket');
+    for i = 1 : length(corebracketresidue)
+        ithresidue = corebracketresidue{i};
         if(isequal(ithresidue.residueType.name,'#bracket'))
-            for j = 1 : length(branchedresidue)
-                jthresidue = branchedresidue{j};
+            for j =1 : length(bracketresidue)
+                jthresidue = bracketresidue{j};
+                if(isequal(jthresidue.residueType.name,'#bracket'))
+                    continue
+                end
                 isResidueAdded = addResidue(corespecies.glycanStruct,ithresidue,jthresidue);
             end
-            break
         end
     end
 end
