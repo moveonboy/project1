@@ -1,0 +1,10 @@
+residueMap                 = load('residueTypes.mat');
+B3GALTI                     = GTEnz([2;4;1;122]);
+B3GALTI.resfuncgroup        = residueMap.allresidues('Gal');
+B3GALTI.resAtt2FG           = residueMap.allresidues('GalNAc');
+galnacBond                 = GlycanBond('?','1');
+B3GALTI. linkresAtt2FG      = struct('bond',galnacBond,'anomer','a');
+galbond                    = GlycanBond('3','1');
+B3GALTI.linkFG              = struct('anomer','b','bond',galbond);
+B3GALTI.substMaxStruct      = glycanMLread('314.16.glycoct_xml');
+enzViewer(B3GALTI);

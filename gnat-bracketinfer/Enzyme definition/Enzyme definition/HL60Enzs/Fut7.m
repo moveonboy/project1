@@ -1,0 +1,13 @@
+residueMap               = load('residueTypes.mat');
+FUT7                     = GTEnz([2;4;1;152]);
+FUT7.resfuncgroup        = residueMap.allresidues('Fuc');
+FUT7.resAtt2FG           = residueMap.allresidues('GlcNAc');
+glcnacBond                  = GlycanBond('?','1');
+FUT7.linkresAtt2FG       = struct('bond',glcnacBond,'anomer','b');
+futbond                  = GlycanBond('3','1');
+FUT7.linkFG              = struct('anomer','a','bond',futbond);
+FUT7.targetBranch        = CellArrayList;
+FUT7.targetBranch.add(glycanMLread('559.28b16.glycoct_xml'));
+FUT7.substMinStruct      = glycanMLread('967.48.glycoct_xml');
+FUT7.isTerminalTarget    = false;
+enzViewer(FUT7);
