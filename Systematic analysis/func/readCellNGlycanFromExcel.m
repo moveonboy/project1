@@ -16,18 +16,18 @@ function varargout= readCellNGlycanFromExcel(i,nglycanname)
 % Date Lastly Updated: 10/27/14
 nargoutchk(1,5)
 [peak,glycancomp,rawdata]   = xlsread(nglycanname);
-nglycancomplist                       = glycancomp(2:end,:);
-nglycanmasslist                        = peak(:,1);
-chowildtype                              = peak(:,i);
-index                                          = isfinite(chowildtype);
-chowildtypecomps                  = nglycancomplist(index);
-chowildtypepeaks                    = nglycanmasslist(index);
+nglycancomplist             = glycancomp(2:end,:);
+nglycanmasslist             = peak(:,1);
+chowildtype                 = peak(:,i);
+index                       = isfinite(chowildtype);
+chowildtypecomps            = nglycancomplist(index);
+chowildtypepeaks            = nglycanmasslist(index);
 % glycanstring = gly3to1letter();
 
 glycanstringarray     = cellfun(@gly1charformat,chowildtypecomps,...
     'UniformOutput', false);
-glycanformulaarray = cellfun(@glycanFormula,glycanstringarray);
-glycanmwarray        = arrayfun(@(x)isotopicdist(x,'SHOWPLOT',false),...
+glycanformulaarray    = cellfun(@glycanFormula,glycanstringarray);
+glycanmwarray         = arrayfun(@(x)isotopicdist(x,'SHOWPLOT',false),...
     glycanformulaarray,'UniformOutput', false);
 
 if(nargout==1)

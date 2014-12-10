@@ -1,4 +1,4 @@
-function glycaninMS = createLocalDataBase(pathwayfilename,varargin) % MSfilename
+function [glycaninMS,expecGlycan] = createLocalDataBase(pathwayfilename,varargin)
 %createLocalDataBase load the glycanpathway to build a local glycan
 % database, including all the potential glycans.
 %
@@ -13,8 +13,9 @@ function glycaninMS = createLocalDataBase(pathwayfilename,varargin) % MSfilename
 % Author: Yusen Zhou
 % Date Lastly Updated: 11/06/14
 
-outputfilename = '';
-if(length(varargin)==1)
+if(isempty(varargin))
+    outputfilename = '';
+elseif(length(varargin)==1)
     outputfilename=varargin{1};
 end
 % load(MSfilename);
@@ -29,7 +30,7 @@ expecGlycan      = cell(length(listofSpecies),1);
 monoisomw        = cell(length(listofSpecies),1);
 for i = 1 : length(listofSpecies)
     ithspecies           = listofSpecies.get(i);
-    ithcompostion        = strcomp(ithspecies);
+    ithcompostion        = struct2strcomp(ithspecies);
     ithspeciesmonomass   = glycanMolWt(ithcompostion);
     expecGlycan{count+1} = ithcompostion;
     monoisomw{count+1}   = ithspeciesmonomass;

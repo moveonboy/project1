@@ -45,7 +45,7 @@ else
 end
 
 mz            = msrawdata(:, 1);
-intensity     = msrawdata(:,2);   % msviewer(mz,intensity);
+intensity  = msrawdata(:,2);   % msviewer(mz,intensity);
 
 % %MS resampling
 % [remz,reintensity] = msresample(mz,intensity,20000,'Range', [1500,6000],'SHOWPLOT',true);

@@ -15,7 +15,7 @@ function glycanEnz = retriveEnzinGlycan(glycanSpeceis,varargin)
 % Author: Yusen Zhou
 % Date Lastly Updated: 10/27/14
 
-narginck(0,2)
+% narginck(0,2)
 
 if(isempty(varargin))
     load('HL60GlyEnzDB')
